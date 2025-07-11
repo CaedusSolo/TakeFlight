@@ -4,6 +4,7 @@
 import { Command } from "commander" // To parse CLI arguments
 import inquirer from "inquirer"  //  To add interactivity to the tool
 import chalk from "chalk"  //  To add colours to CLI text
+import { generateTemplate } from "./generator"
 
 const program = new Command()
 
@@ -23,12 +24,12 @@ async function callback() {
         }
     ])
     try {
-        console.log(answers.template)
-        console.log(answers.projectName)
-        console.log(chalk.green("Success!"))
+        await generateTemplate(answers.template, answers.projectName)
+        console.log(chalk.green(`Success! Project generated is at ./${answers.projectName}`))
     }
     catch (error) {
         console.log(chalk.red("Error"))
+        process.exit(1)
     } 
 }
 
