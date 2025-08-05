@@ -25,9 +25,11 @@ const chalk_1 = __importDefault(require("chalk"));
  */
 function generateTemplate(templateName, projectName) {
     return __awaiter(this, void 0, void 0, function* () {
-        // Add this temporarily to cli.ts
-        const templateDirectory = path_1.default.join(__dirname, '..', // Go up from dist/ to project root
-        'templates', templateName);
+        console.log('Project root:', process.cwd());
+        console.log('__dirname:', __dirname);
+        console.log('Attempting to find templates at:', path_1.default.join(__dirname, '..', '..', 'templates'));
+        const templateDirectory = path_1.default.resolve(process.cwd(), 'src', 'templates', templateName);
+        console.log('Final template path:', templateDirectory);
         const targetDirectory = path_1.default.join(process.cwd(), projectName);
         // validate project name with regex
         if (!/^[a-z0-9-]+$/.test(projectName)) {
