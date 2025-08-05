@@ -11,8 +11,13 @@ import chalk from 'chalk'
  */
 
 export async function generateTemplate(templateName: string, projectName: string) {
-
-    const templateDirectory = path.join(__dirname, 'templates', templateName)
+// Add this temporarily to cli.ts
+    const templateDirectory = path.join(
+        __dirname,
+        '..',  // Go up from dist/ to project root
+        'templates',
+        templateName
+    );
     const targetDirectory = path.join(process.cwd(), projectName)
 
     // validate project name with regex

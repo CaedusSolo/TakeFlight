@@ -28,7 +28,7 @@ async function callback() {
         console.log(chalk.green(`Success! Project generated is at ./${answers.projectName}`))
     }
     catch (error) {
-        console.log(chalk.red("Error"))
+        console.log(chalk.red(error))
         process.exit(1)
     } 
 }
