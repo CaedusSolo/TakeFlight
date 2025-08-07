@@ -41,7 +41,7 @@ function setupAuth(projectDir, provider) {
         const setupFilePath = path_1.default.join(authTemplatePath, 'AUTH_SETUP.md');
         if (yield fs_extra_1.default.pathExists(setupFilePath)) {
             yield fs_extra_1.default.copy(setupFilePath, path_1.default.join(projectDir, 'AUTH-SETUP.md'));
-            console.log(chalk_1.default.green('✓ Copied auth setup guide to AUTH-SETUP.md'));
+            console.log(chalk_1.default.green('\n✓ Copied auth setup guide to AUTH-SETUP.md'));
         }
         // Update imports in template files
         const authEntryPath = path_1.default.join(authTargetDir, 'auth.js');

@@ -39,7 +39,7 @@ export async function setupAuth(projectDir: string, provider: AuthProvider) {
       setupFilePath,
       path.join(projectDir, 'AUTH-SETUP.md') 
     );
-    console.log(chalk.green('✓ Copied auth setup guide to AUTH-SETUP.md'));
+    console.log(chalk.green('\n✓ Copied auth setup guide to AUTH-SETUP.md'));
   }
 
   // Update imports in template files
