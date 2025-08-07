@@ -4,6 +4,6 @@ import {
   createUserWithEmailAndPassword 
 } from 'firebase/auth';
 
-export async function firebaseSignIn(email: string, password: string) {
+export async function firebaseSignIn(email, password) {
   return await signInWithEmailAndPassword(auth, email, password);
 }
