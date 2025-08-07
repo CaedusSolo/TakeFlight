@@ -18,33 +18,25 @@ const path_1 = __importDefault(require("path"));
 const handlebars_1 = __importDefault(require("handlebars"));
 const child_process_1 = require("child_process");
 const chalk_1 = __importDefault(require("chalk"));
-/**
- * Generate project from a template
- * @param templateName - Name of the template (eg 'express')
- * @param projectName - Target directory name
- */
-function generateTemplate(templateName, projectName) {
+const auth_1 = require("./auth");
+function generateTemplate(options) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log('Project root:', process.cwd());
-        console.log('__dirname:', __dirname);
-        console.log('Attempting to find templates at:', path_1.default.join(__dirname, '..', '..', 'templates'));
+        const { projectName, templateName, auth } = options;
         const templateDirectory = path_1.default.resolve(process.cwd(), 'src', 'templates', templateName);
-        console.log('Final template path:', templateDirectory);
         const targetDirectory = path_1.default.join(process.cwd(), projectName);
-        // validate project name with regex
+        // Validate project name
         if (!/^[a-z0-9-]+$/.test(projectName)) {
             throw new Error("Project name must be lowercase, with hyphens only, no spaces.");
         }
         if (yield fs_extra_1.default.pathExists(targetDirectory)) {
             throw new Error(`Directory ${projectName} already exists.`);
         }
-        // copy files
+        // Copy template files
         if (!(yield fs_extra_1.default.pathExists(templateDirectory))) {
             throw new Error(`Template ${templateName} not found`);
         }
-        else {
-            yield fs_extra_1.default.copy(templateDirectory, targetDirectory);
-        }
+        yield fs_extra_1.default.copy(templateDirectory, targetDirectory);
+        // Process template files
         const filesToProcess = ['package.json', 'README.md'];
         for (const file of filesToProcess) {
             const filePath = path_1.default.join(targetDirectory, file);
@@ -54,11 +46,21 @@ function generateTemplate(templateName, projectName) {
                 yield fs_extra_1.default.writeFile(filePath, compiled({ projectName }));
             }
         }
-        // install dependencies
+        // Install dependencies
         console.log(chalk_1.default.blue(`Installing dependencies...`));
         (0, child_process_1.execSync)('npm install', { cwd: targetDirectory, stdio: "inherit" });
-        // git init
+        console.log(chalk_1.default.green('Successfully installed project dependencies!'));
+        // Initialize Git
         console.log(chalk_1.default.blue("Running git init..."));
         (0, child_process_1.execSync)('git init', { cwd: targetDirectory });
+        console.log(chalk_1.default.green("Successfully initialized Git repository!"));
+        // Setup authentication
+        try {
+            yield (0, auth_1.setupAuth)(targetDirectory, auth);
+        }
+        catch (error) {
+            console.log(chalk_1.default.yellow('⚠️ Auth setup skipped due to error:'));
+            console.log(chalk_1.default.red(error.message));
+        }
     });
 }

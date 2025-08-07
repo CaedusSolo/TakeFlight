@@ -33,10 +33,25 @@ function callback() {
                 name: 'projectName',
                 message: 'Enter project name: ',
                 default: 'my-app',
+            },
+            {
+                type: "list",
+                name: "auth",
+                message: "Include authentication?",
+                choices: [
+                    { name: "No", value: false },
+                    { name: "Yes - Supabase", value: 'supabase' },
+                    { name: "Yes- Firebase", value: 'firebase' }
+                ],
+                default: 'none'
             }
         ]);
         try {
-            yield (0, generator_1.generateTemplate)(answers.template, answers.projectName);
+            yield (0, generator_1.generateTemplate)({
+                projectName: answers.projectName,
+                templateName: answers.template,
+                auth: answers.auth
+            });
             console.log(chalk_1.default.green(`Success! Project generated is at ./${answers.projectName}`));
         }
         catch (error) {

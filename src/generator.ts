@@ -1,38 +1,40 @@
-import fs from 'fs-extra'
-import path from 'path'
-import Handlebars from 'handlebars'
-import { execSync } from 'child_process'
-import chalk from 'chalk'
+import fs from 'fs-extra';
+import path from 'path';
+import Handlebars from 'handlebars';
+import { execSync } from 'child_process';
+import chalk from 'chalk';
+import { AuthProvider, setupAuth } from './auth';
 
-/** 
- * Generate project from a template
- * @param templateName - Name of the template (eg 'express')
- * @param projectName - Target directory name
- */
+interface Options {
+    projectName: string;
+    templateName: 'express' | 'react';
+    auth: AuthProvider;
+}
 
-export async function generateTemplate(templateName: string, projectName: string) {
+export async function generateTemplate(options: Options) {
+    const { projectName, templateName, auth } = options;
+
     const templateDirectory = path.resolve(process.cwd(), 'src', 'templates', templateName);
-    const targetDirectory = path.join(process.cwd(), projectName)
+    const targetDirectory = path.join(process.cwd(), projectName);
 
-    // validate project name with regex
+    // Validate project name
     if (!/^[a-z0-9-]+$/.test(projectName)) {
-        throw new Error("Project name must be lowercase, with hyphens only, no spaces.")
+        throw new Error("Project name must be lowercase, with hyphens only, no spaces.");
     }
 
     if (await fs.pathExists(targetDirectory)) {
-        throw new Error(`Directory ${projectName} already exists.`)
+        throw new Error(`Directory ${projectName} already exists.`);
     }
 
-
-    // copy files
+    // Copy template files
     if (!(await fs.pathExists(templateDirectory))) {
-        throw new Error(`Template ${templateName} not found`)
+        throw new Error(`Template ${templateName} not found`);
     }
-    else {
-        await fs.copy(templateDirectory, targetDirectory)
-    }
+    
+    await fs.copy(templateDirectory, targetDirectory);
 
-    const filesToProcess = ['package.json', 'README.md']
+    // Process template files
+    const filesToProcess = ['package.json', 'README.md'];
     for (const file of filesToProcess) {
         const filePath = path.join(targetDirectory, file);
         if (await fs.pathExists(filePath)) {
@@ -42,12 +44,21 @@ export async function generateTemplate(templateName: string, projectName: string
         }
     }
 
-    // install dependencies
-    console.log(chalk.blue(`Installing dependencies...`))
-    execSync('npm install', { cwd: targetDirectory, stdio: "inherit" })
+    // Install dependencies
+    console.log(chalk.blue(`Installing dependencies...`));
+    execSync('npm install', { cwd: targetDirectory, stdio: "inherit" });
+    console.log(chalk.green('Successfully installed project dependencies!'))
 
-    // git init
-    console.log(chalk.blue("Running git init..."))
-    execSync('git init', { cwd: targetDirectory })
+    // Initialize Git
+    console.log(chalk.blue("Running git init..."));
+    execSync('git init', { cwd: targetDirectory });
+    console.log(chalk.green("Successfully initialized Git repository!"))
 
+    // Setup authentication
+    try {
+        await setupAuth(targetDirectory, auth);
+    } catch (error) {
+        console.log(chalk.yellow('⚠️ Auth setup skipped due to error:'));
+        console.log(chalk.red((error as Error).message));
+    }
 }
