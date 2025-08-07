@@ -27,7 +27,7 @@ async function callback() {
             name: "auth",
             message: "Include authentication?",
             choices: [
-                { name: "No", value: false },
+                { name: "No", value: 'none' },
                 { name: "Yes - Supabase", value: 'supabase' },
                 { name: "Yes- Firebase", value: 'firebase' }
             ],
