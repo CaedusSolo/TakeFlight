@@ -49,9 +49,11 @@ function generateTemplate(options) {
         // Install dependencies
         console.log(chalk_1.default.blue(`Installing dependencies...`));
         (0, child_process_1.execSync)('npm install', { cwd: targetDirectory, stdio: "inherit" });
+        console.log(chalk_1.default.green('Successfully installed project dependencies!'));
         // Initialize Git
         console.log(chalk_1.default.blue("Running git init..."));
         (0, child_process_1.execSync)('git init', { cwd: targetDirectory });
+        console.log(chalk_1.default.green("Successfully initialized Git repository!"));
         // Setup authentication
         try {
             yield (0, auth_1.setupAuth)(targetDirectory, auth);
