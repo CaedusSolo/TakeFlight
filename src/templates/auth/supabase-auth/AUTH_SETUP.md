@@ -1,5 +1,9 @@
-1. Get keys from Supabase project dashboard ([https://app.supabase.com](https://app.supabase.com))
-2. Create a .env file 
-3. Add relevant keys: 
-   SUPABASE_URL = your-value-here
-   SUPABASE_KEY = your-value-here
+# Supabase Quick Start
+
+1. **Get credentials**  
+   - Go to [Supabase Dashboard](https://app.supabase.com) → Project Settings → API Settings
+
+2. **Create and Add to `.env`**  
+   ```bash
+   SUPABASE_URL=your-project-url
+   SUPABASE_KEY=your-key
