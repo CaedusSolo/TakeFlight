@@ -30,7 +30,7 @@ export async function generateTemplate(options: Options) {
     if (!(await fs.pathExists(templateDirectory))) {
         throw new Error(`Template ${templateName} not found`);
     }
-    
+
     await fs.copy(templateDirectory, targetDirectory);
 
     // Process template files

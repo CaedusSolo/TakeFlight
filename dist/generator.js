@@ -18,6 +18,7 @@ const path_1 = __importDefault(require("path"));
 const handlebars_1 = __importDefault(require("handlebars"));
 const child_process_1 = require("child_process");
 const chalk_1 = __importDefault(require("chalk"));
+const ora_1 = __importDefault(require("ora"));
 const auth_1 = require("./auth");
 function generateTemplate(options) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -35,7 +36,9 @@ function generateTemplate(options) {
         if (!(yield fs_extra_1.default.pathExists(templateDirectory))) {
             throw new Error(`Template ${templateName} not found`);
         }
+        const spinner = (0, ora_1.default)('Copying template files...').start();
         yield fs_extra_1.default.copy(templateDirectory, targetDirectory);
+        spinner.succeed('Template files copied!');
         // Process template files
         const filesToProcess = ['package.json', 'README.md'];
         for (const file of filesToProcess) {
