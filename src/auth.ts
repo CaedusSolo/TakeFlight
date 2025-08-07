@@ -24,28 +24,34 @@ export const AUTH_PROVIDERS: Record<Exclude<AuthProvider, 'none'>, AuthConfig> =
 };
 
 export async function setupAuth(projectDir: string, provider: AuthProvider) {
-    if (provider == 'none') return;
+  if (provider === 'none') return;
 
-    const config = AUTH_PROVIDERS[provider];
-    const authTemplatePath = path.join(__dirname, "..", "src", "templates", "auth", config.templateDir);
+  const config = AUTH_PROVIDERS[provider];
+  const authTemplatePath = path.join(__dirname, '..', 'src', 'templates', 'auth', config.templateDir, 'src');
+  const authTargetDir = path.join(projectDir, 'src', 'auth'); // New auth folder
 
-    if (!(await fs.pathExists(authTemplatePath))) {
-        throw new Error(`Auth template for ${provider} not found at ${authTemplatePath}`)
-    }
+  // Create auth directoryi
+  await fs.ensureDir(authTargetDir);
 
-    await fs.copy(authTemplatePath, projectDir)
+  // Copy files to /src/auth
+  await fs.copy(authTemplatePath, authTargetDir);
 
-    const packageJsonPath = path.join(projectDir, 'package.json')
-    const pkge = await fs.readJson(packageJsonPath)
+  // Update imports in template files
+  const authEntryPath = path.join(authTargetDir, 'auth.js');
+  if (await fs.pathExists(authEntryPath)) {
+    let content = await fs.readFile(authEntryPath, 'utf-8');
+    content = content.replace(/from '\.\//g, "from './auth/");
+    await fs.writeFile(authEntryPath, content);
+  }
 
-    pkge.dependencies = {
-        ...pkge.dependencies,
-        ...config.dependencies.reduce((acc, dependency) => ({ ...acc, [dependency]: 'latest' }), {})
-    }
+  // Update main package.json
+  const pkgPath = path.join(projectDir, 'package.json');
+  const pkg = await fs.readJson(pkgPath);
+  
+  pkg.dependencies = {
+    ...pkg.dependencies,
+    ...config.dependencies.reduce((acc, dep) => ({ ...acc, [dep]: 'latest' }), {})
+  };
 
-    await fs.writeJson(packageJsonPath, pkge, { spaces: 2 })
-
-    console.log(chalk.green(`✓ Added ${provider} auth setup`));
-    console.log(chalk.yellow(`⚠️ Add these ENV vars to your .env file:`));
-    config.envVars.forEach(varName => console.log(`- ${varName}=your_value`));
+  await fs.writeJson(pkgPath, pkg, { spaces: 2 });
 }

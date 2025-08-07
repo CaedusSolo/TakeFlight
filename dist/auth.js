@@ -16,7 +16,6 @@ exports.AUTH_PROVIDERS = void 0;
 exports.setupAuth = setupAuth;
 const fs_extra_1 = __importDefault(require("fs-extra"));
 const path_1 = __importDefault(require("path"));
-const chalk_1 = __importDefault(require("chalk"));
 exports.AUTH_PROVIDERS = {
     supabase: {
         envVars: ['SUPABASE_URL', 'SUPABASE_KEY'],
@@ -31,20 +30,26 @@ exports.AUTH_PROVIDERS = {
 };
 function setupAuth(projectDir, provider) {
     return __awaiter(this, void 0, void 0, function* () {
-        if (provider == 'none')
+        if (provider === 'none')
             return;
         const config = exports.AUTH_PROVIDERS[provider];
-        const authTemplatePath = path_1.default.join(__dirname, "..", "src", "templates", "auth", config.templateDir);
-        if (!(yield fs_extra_1.default.pathExists(authTemplatePath))) {
-            throw new Error(`Auth template for ${provider} not found at ${authTemplatePath}`);
+        const authTemplatePath = path_1.default.join(__dirname, '..', 'src', 'templates', 'auth', config.templateDir, 'src');
+        const authTargetDir = path_1.default.join(projectDir, 'src', 'auth'); // New auth folder
+        // Create auth directoryi
+        yield fs_extra_1.default.ensureDir(authTargetDir);
+        // Copy files to /src/auth
+        yield fs_extra_1.default.copy(authTemplatePath, authTargetDir);
+        // Update imports in template files
+        const authEntryPath = path_1.default.join(authTargetDir, 'auth.js');
+        if (yield fs_extra_1.default.pathExists(authEntryPath)) {
+            let content = yield fs_extra_1.default.readFile(authEntryPath, 'utf-8');
+            content = content.replace(/from '\.\//g, "from './auth/");
+            yield fs_extra_1.default.writeFile(authEntryPath, content);
         }
-        yield fs_extra_1.default.copy(authTemplatePath, projectDir);
-        const packageJsonPath = path_1.default.join(projectDir, 'package.json');
-        const pkge = yield fs_extra_1.default.readJson(packageJsonPath);
-        pkge.dependencies = Object.assign(Object.assign({}, pkge.dependencies), config.dependencies.reduce((acc, dependency) => (Object.assign(Object.assign({}, acc), { [dependency]: 'latest' })), {}));
-        yield fs_extra_1.default.writeJson(packageJsonPath, pkge, { spaces: 2 });
-        console.log(chalk_1.default.green(`✓ Added ${provider} auth setup`));
-        console.log(chalk_1.default.yellow(`⚠️ Add these ENV vars to your .env file:`));
-        config.envVars.forEach(varName => console.log(`- ${varName}=your_value`));
+        // Update main package.json
+        const pkgPath = path_1.default.join(projectDir, 'package.json');
+        const pkg = yield fs_extra_1.default.readJson(pkgPath);
+        pkg.dependencies = Object.assign(Object.assign({}, pkg.dependencies), config.dependencies.reduce((acc, dep) => (Object.assign(Object.assign({}, acc), { [dep]: 'latest' })), {}));
+        yield fs_extra_1.default.writeJson(pkgPath, pkg, { spaces: 2 });
     });
 }
