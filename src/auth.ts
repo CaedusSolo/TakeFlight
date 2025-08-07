@@ -27,14 +27,20 @@ export async function setupAuth(projectDir: string, provider: AuthProvider) {
   if (provider === 'none') return;
 
   const config = AUTH_PROVIDERS[provider];
-  const authTemplatePath = path.join(__dirname, '..', 'src', 'templates', 'auth', config.templateDir, 'src');
-  const authTargetDir = path.join(projectDir, 'src', 'auth'); // New auth folder
+  const authTemplatePath = path.join(__dirname, '..', 'src', 'templates', 'auth', config.templateDir);
 
-  // Create auth directoryi
-  await fs.ensureDir(authTargetDir);
+  // 1. Copy auth files to /src/auth
+  const authTargetDir = path.join(projectDir, 'src', 'auth');
+  await fs.copy(path.join(authTemplatePath, 'src'), authTargetDir);
 
-  // Copy files to /src/auth
-  await fs.copy(authTemplatePath, authTargetDir);
+  const setupFilePath = path.join(authTemplatePath, 'AUTH_SETUP.md');
+  if (await fs.pathExists(setupFilePath)) {
+    await fs.copy(
+      setupFilePath,
+      path.join(projectDir, 'AUTH-SETUP.md') 
+    );
+    console.log(chalk.green('✓ Copied auth setup guide to AUTH-SETUP.md'));
+  }
 
   // Update imports in template files
   const authEntryPath = path.join(authTargetDir, 'auth.js');

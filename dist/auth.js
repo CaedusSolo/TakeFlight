@@ -16,6 +16,7 @@ exports.AUTH_PROVIDERS = void 0;
 exports.setupAuth = setupAuth;
 const fs_extra_1 = __importDefault(require("fs-extra"));
 const path_1 = __importDefault(require("path"));
+const chalk_1 = __importDefault(require("chalk"));
 exports.AUTH_PROVIDERS = {
     supabase: {
         envVars: ['SUPABASE_URL', 'SUPABASE_KEY'],
@@ -33,12 +34,15 @@ function setupAuth(projectDir, provider) {
         if (provider === 'none')
             return;
         const config = exports.AUTH_PROVIDERS[provider];
-        const authTemplatePath = path_1.default.join(__dirname, '..', 'src', 'templates', 'auth', config.templateDir, 'src');
-        const authTargetDir = path_1.default.join(projectDir, 'src', 'auth'); // New auth folder
-        // Create auth directoryi
-        yield fs_extra_1.default.ensureDir(authTargetDir);
-        // Copy files to /src/auth
-        yield fs_extra_1.default.copy(authTemplatePath, authTargetDir);
+        const authTemplatePath = path_1.default.join(__dirname, '..', 'src', 'templates', 'auth', config.templateDir);
+        // 1. Copy auth files to /src/auth
+        const authTargetDir = path_1.default.join(projectDir, 'src', 'auth');
+        yield fs_extra_1.default.copy(path_1.default.join(authTemplatePath, 'src'), authTargetDir);
+        const setupFilePath = path_1.default.join(authTemplatePath, 'AUTH_SETUP.md');
+        if (yield fs_extra_1.default.pathExists(setupFilePath)) {
+            yield fs_extra_1.default.copy(setupFilePath, path_1.default.join(projectDir, 'AUTH-SETUP.md'));
+            console.log(chalk_1.default.green('✓ Copied auth setup guide to AUTH-SETUP.md'));
+        }
         // Update imports in template files
         const authEntryPath = path_1.default.join(authTargetDir, 'auth.js');
         if (yield fs_extra_1.default.pathExists(authEntryPath)) {
