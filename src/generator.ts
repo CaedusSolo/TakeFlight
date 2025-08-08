@@ -4,8 +4,7 @@ import Handlebars from 'handlebars';
 import { execSync } from 'child_process';
 import chalk from 'chalk';
 import { createSpinner } from 'nanospinner';
-import { AuthProvider, setupAuth, addNextJsAuth, NEXTJS_AUTH_PROVIDERS } from './auth';
-
+import { AuthProvider, setupAuth, AUTH_PROVIDERS } from './auth';
 
 interface Options {
     projectName: string;
@@ -14,40 +13,43 @@ interface Options {
 }
 
 export async function generateTemplate(options: Options) {
-    const spinner = createSpinner('Launching project setup...').start();
+    const spinner = createSpinner('Initializing project...').start();
+    spinner.stop()
 
     try {
         const { projectName, templateName, auth } = options;
+        const sanitizedName = projectName
+            .trim()
+            .toLowerCase()
+            .replace(/\s+/g, '-') // replace spaces with hyphens
+            .replace(/[^a-z0-9-]/g, ''); 
 
-        // run create-next-app if nextjs is the template
-        if (templateName === 'nextjs') {
-            await createNextApp(projectName, auth)
-            return
-        }
+        const targetDirectory = path.join(process.cwd(), sanitizedName);
 
-        const templateDirectory = path.resolve(process.cwd(), 'src', 'templates', templateName);
-        const targetDirectory = path.join(process.cwd(), projectName);
-
-        // --- Validation Phase ---
-        spinner.update({ text: 'Validating project...' });
+        // --- Validation ---
         if (!/^[a-z0-9-]+$/.test(projectName)) {
-            throw new Error("Project name must be lowercase, with hyphens only, no spaces.");
+            throw new Error("Project name must be lowercase with hyphens only");
         }
         if (await fs.pathExists(targetDirectory)) {
-            throw new Error(`Directory ${projectName} already exists.`);
-        }
-        if (!(await fs.pathExists(templateDirectory))) {
-            throw new Error(`Template ${templateName} not found`);
+            throw new Error(`Directory ${projectName} already exists`);
         }
 
-        // --- File Operations ---
+        // --- Next.js Special Handling ---
+        if (templateName === 'nextjs') {
+            await setupNextJsProject(targetDirectory, auth);
+            spinner.stop()
+            return;
+        }
+
+        spinner.stop()
+        // --- Regular Templates ---
+        const templateDirectory = path.resolve(__dirname, '..', 'src', 'templates', templateName);
+
+        // Copy template
         spinner.update({ text: 'Copying template files...' });
         await fs.copy(templateDirectory, targetDirectory);
-        spinner.stop();
-        console.log(chalk.green('✓ Template files copied'));
-        spinner.start();
 
-        // --- Configuration ---
+        // Process template files
         spinner.update({ text: 'Configuring project...' });
         const filesToProcess = ['package.json', 'README.md'];
         for (const file of filesToProcess) {
@@ -58,63 +60,98 @@ export async function generateTemplate(options: Options) {
             }
         }
 
-        // --- Dependencies ---
+        // Install dependencies
         spinner.update({ text: 'Installing dependencies...' });
-        spinner.stop();
         execSync('npm install', { cwd: targetDirectory, stdio: "inherit" });
-        console.log(chalk.green('✓ Dependencies installed'));
-        spinner.start();
 
-        // --- Git Init ---
+        // Initialize Git
         spinner.update({ text: 'Initializing Git...' });
         execSync('git init', { cwd: targetDirectory });
-        spinner.stop();
-        console.log(chalk.green('✓ Git repository initialized'));
-        spinner.start();
+        spinner.stop()
 
-        // --- Auth Setup ---
+        // Setup auth (if specified)
         if (auth !== 'none') {
-            try {
-                spinner.update({ text: '🔐 Setting up authentication...' });
-                await setupAuth(targetDirectory, auth);
-                spinner.stop();
-                console.log(chalk.green('✓ Authentication configured'));
-                spinner.start();
-            } catch (error) {
-                spinner.stop();
-                console.log(chalk.yellow('⚠️  Authentication setup skipped'));
-                console.log(chalk.red(`   ${(error as Error).message}`));
-                spinner.start();
-            }
+            await setupAuth(targetDirectory, auth);
         }
 
-        // --- Completion ---
-        spinner.stop();
-        console.log(chalk.bold.green('\n✨ Project ready!\n'));
-        console.log(chalk.bold('Next steps:'));
-        console.log(`  ${chalk.cyan(`cd ${projectName}`)}`);
-        if (auth !== 'none') {
-            console.log(`  ${chalk.cyan('Configure your .env file')}`);
-        }
-        console.log(`  ${chalk.cyan('Start developing!')}`);
+        // Success message
+        printSuccessMessage(projectName, auth);
 
     } catch (error) {
-        spinner.error({ text: '💥 Project generation failed' });
-        console.error(chalk.red('\nError:'), error instanceof Error ? error.message : error);
+        spinner.error(chalk.red('Project generation failed'));
+        console.error(chalk.red(error instanceof Error ? error.message : error));
         process.exit(1);
     }
 }
 
-async function createNextApp(targetDirectory: string, authProvider: AuthProvider) {
-    // run create-next-app 
-    execSync(
-        `npx create-next-app@latest ${targetDirectory}`,
-        { stdio: 'inherit' }
-    )
+async function setupNextJsProject(projectDir: string, auth: AuthProvider) {
+  const spinner = createSpinner('Creating Next.js app...').start();
 
-    if (authProvider !== "none") {
-        if (authProvider in NEXTJS_AUTH_PROVIDERS) {
-            addNextJsAuth(targetDirectory, authProvider as keyof typeof NEXTJS_AUTH_PROVIDERS)
-        }
+  try {
+    // Ensure parent directory exists
+    await fs.ensureDir(path.dirname(projectDir));
+
+    // Make sure project folder doesn't already exist
+    if (await fs.pathExists(projectDir)) {
+      throw new Error(`Directory ${projectDir} already exists`);
+    }
+
+    // Pre-create the target folder to avoid permission errors
+    await fs.mkdir(projectDir);
+
+    const useTypeScript = true;
+    const useTailwind = true;
+    const useSrcDir = true;
+    const useAppRouter = true;
+    const useTurpoback = false; // set from CLI if you prompt for it
+    const importAlias = '@/*';
+    const useEslint = false;
+
+    // Build flags for create-next-app
+    const flags = [
+      '--ts',                       // TypeScript
+      useTailwind && '--tailwind',  // Tailwind CSS
+      useSrcDir && '--src-dir',     // src/ folder
+      useAppRouter && '--app',      // App Router
+      !useEslint && '--no-eslint',  // Disable ESLint
+      '--use-npm',                  // Force npm
+      `--import-alias "${importAlias}"`,
+      '--yes'                       // Skip all prompts
+    ].filter(Boolean).join(' ');
+
+    // Run create-next-app in the projectDir
+    execSync(
+      `npx create-next-app@latest ${projectDir} ${flags}`,
+      { stdio: 'inherit' }
+    );
+
+    // 2. Add auth if specified
+    if (auth !== 'none') {
+      if (!AUTH_PROVIDERS[auth]?.isNextJsCompatible) {
+        throw new Error(`${auth} auth is not supported for Next.js`);
+      }
+      await setupAuth(projectDir, auth, true); // isNextJsProject = true
+    }
+
+    spinner.success(chalk.green('Next.js project created'));
+    printSuccessMessage(path.basename(projectDir), auth);
+
+  } catch (error) {
+    spinner.error(chalk.red('Next.js setup failed'));
+    await fs.remove(projectDir); // Cleanup
+    throw error;
+  }
+}
+
+
+function printSuccessMessage(projectName: string, auth: AuthProvider) {
+    console.log(chalk.bold.green('\nProject ready!'));
+    console.log(chalk.blue('\nNext steps:'));
+    console.log(`  ${chalk.cyan(`cd ${projectName}`)}`);
+    console.log(`  ${chalk.cyan('npm run dev')}`);
+
+    if (auth !== 'none') {
+        console.log(chalk.yellow('\nConfigure these in .env.local:'));
+        console.log(chalk.cyan(AUTH_PROVIDERS[auth].envVars.join('\n')));
     }
 }

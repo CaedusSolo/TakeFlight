@@ -12,85 +12,75 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.NEXTJS_AUTH_PROVIDERS = exports.AUTH_PROVIDERS = void 0;
+exports.AUTH_PROVIDERS = void 0;
 exports.setupAuth = setupAuth;
-exports.addNextJsAuth = addNextJsAuth;
 const fs_extra_1 = __importDefault(require("fs-extra"));
 const path_1 = __importDefault(require("path"));
 const chalk_1 = __importDefault(require("chalk"));
-const child_process_1 = require("child_process");
+const nanospinner_1 = require("nanospinner");
 exports.AUTH_PROVIDERS = {
     supabase: {
-        envVars: ['SUPABASE_URL', 'SUPABASE_KEY'],
+        envVars: [
+            'NEXT_PUBLIC_SUPABASE_URL',
+            'NEXT_PUBLIC_SUPABASE_ANON_KEY'
+        ],
         dependencies: ['@supabase/supabase-js'],
-        templateDir: 'supabase-auth'
+        templateDir: 'supabase-auth',
+        isNextJsCompatible: true
     },
     firebase: {
-        envVars: ['FIREBASE_API_KEY', 'FIREBASE_AUTH_DOMAIN'],
+        envVars: [
+            'NEXT_PUBLIC_FIREBASE_API_KEY',
+            'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN'
+        ],
         dependencies: ['firebase'],
-        templateDir: 'firebase-auth'
-    }
-};
-exports.NEXTJS_AUTH_PROVIDERS = {
-    supabase: {
-        files: 'templates/nextjs-auth/supabase',
-        dependencies: ['@supabase/supabase-js'],
-        envVars: ['NEXT_PUBLIC_SUPABASE_KEY', 'NEXT_PUBLIC_SUPABASE_URL']
-    },
-    firebase: {
-        files: 'templates/nextjs-auth/firebase',
-        dependencies: ['firebase'],
-        envVars: ['NEXT_PUBLIC_FIREBASE_API_KEY', 'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN']
+        templateDir: 'firebase-auth',
+        isNextJsCompatible: true
     },
     nextauth: {
-        files: 'templates/nextjs-auth/next-auth',
+        envVars: [
+            'NEXTAUTH_SECRET',
+            'NEXTAUTH_URL',
+            'GITHUB_CLIENT_ID',
+            'GITHUB_CLIENT_SECRET'
+        ],
         dependencies: ['next-auth'],
-        envVars: ['NEXTAUTH_SECRET', 'NEXTAUTH_URL']
+        templateDir: 'nextauth',
+        isNextJsCompatible: true
     }
 };
-function setupAuth(projectDir, provider) {
-    return __awaiter(this, void 0, void 0, function* () {
+function setupAuth(projectDir_1, provider_1) {
+    return __awaiter(this, arguments, void 0, function* (projectDir, provider, isNextJsProject = false) {
         if (provider === 'none')
             return;
-        // Skip unsupported providers (e.g., nextauth is Next.js-only)
-        if (!(provider in exports.AUTH_PROVIDERS)) {
-            console.log(chalk_1.default.yellow(`Skipping generic auth setup for provider "${provider}".`));
-            return;
-        }
         const config = exports.AUTH_PROVIDERS[provider];
-        const authTemplatePath = path_1.default.join(__dirname, '..', 'src', 'templates', 'auth', config.templateDir);
-        // 1. Copy auth files to /src/auth
-        const authTargetDir = path_1.default.join(projectDir, 'src', 'auth');
-        yield fs_extra_1.default.copy(path_1.default.join(authTemplatePath, 'src'), authTargetDir);
-        // 2. Copy setup guide if available
-        const setupFilePath = path_1.default.join(authTemplatePath, 'AUTH_SETUP.md');
-        if (yield fs_extra_1.default.pathExists(setupFilePath)) {
-            yield fs_extra_1.default.copy(setupFilePath, path_1.default.join(projectDir, 'AUTH-SETUP.md'));
-            console.log(chalk_1.default.green('\n✓ Copied auth setup guide to AUTH-SETUP.md'));
+        const spinner = (0, nanospinner_1.createSpinner)(`Configuring ${provider} auth...`).start();
+        spinner.stop();
+        try {
+            // Determine template source path
+            const templatePath = path_1.default.join(__dirname, '..', 'src', 'templates', 'auth', isNextJsProject ? 'nextjs-auth' : 'auth', // Use correct parent folder
+            provider // Go directly into provider-specific folder
+            );
+            // Determine target path
+            const targetPath = isNextJsProject
+                ? path_1.default.join(projectDir, 'src/app') // Next.js puts auth in app/
+                : path_1.default.join(projectDir, 'src/auth'); // Others use src/auth
+            // 1. Copy template files
+            yield fs_extra_1.default.copy(templatePath, targetPath, {
+                overwrite: true,
+                filter: (src) => !src.includes('node_modules') // Safety check
+            });
         }
-        // 3. Fix imports in the auth entry file
-        const authEntryPath = path_1.default.join(authTargetDir, 'auth.js');
-        if (yield fs_extra_1.default.pathExists(authEntryPath)) {
-            let content = yield fs_extra_1.default.readFile(authEntryPath, 'utf-8');
-            content = content.replace(/from '\.\//g, "from './auth/");
-            yield fs_extra_1.default.writeFile(authEntryPath, content);
+        catch (error) {
+            spinner.error(chalk_1.default.red(`${provider} auth setup failed`));
+            console.error(chalk_1.default.red(error instanceof Error ? error.message : error));
+            // Cleanup on failure
+            if (isNextJsProject) {
+                yield fs_extra_1.default.remove(path_1.default.join(projectDir, 'src/app/auth'));
+            }
+            else {
+                yield fs_extra_1.default.remove(path_1.default.join(projectDir, 'src/auth'));
+            }
         }
-        // 4. Add dependencies to package.json
-        const pkgPath = path_1.default.join(projectDir, 'package.json');
-        const pkg = yield fs_extra_1.default.readJson(pkgPath);
-        pkg.dependencies = Object.assign(Object.assign({}, pkg.dependencies), config.dependencies.reduce((acc, dep) => (Object.assign(Object.assign({}, acc), { [dep]: 'latest' })), {}));
-        yield fs_extra_1.default.writeJson(pkgPath, pkg, { spaces: 2 });
-    });
-}
-function addNextJsAuth(projectDirectory, auth) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const authConfig = exports.NEXTJS_AUTH_PROVIDERS[auth];
-        // 1. Copy template files
-        yield fs_extra_1.default.copy(path_1.default.join(__dirname, authConfig.files), projectDirectory);
-        // 2. Install dependencies
-        (0, child_process_1.execSync)(`npm install ${authConfig.dependencies.join(' ')}`, {
-            cwd: projectDirectory,
-            stdio: 'inherit'
-        });
     });
 }
