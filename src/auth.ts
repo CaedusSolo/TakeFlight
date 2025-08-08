@@ -1,7 +1,6 @@
 import fs from 'fs-extra';
 import path from 'path';
 import chalk from 'chalk';
-import { execSync } from 'child_process';
 import { createSpinner } from 'nanospinner';
 
 export type AuthProvider = 'supabase' | 'firebase' | 'nextauth' | 'none';
@@ -70,13 +69,13 @@ export async function setupAuth(
 
     // Determine target path
     const targetPath = isNextJsProject
-      ? path.join(projectDir, 'src/app') // Next.js puts auth in app/
-      : path.join(projectDir, 'src/auth'); // Others use src/auth
+      ? path.join(projectDir, 'src/app') 
+      : path.join(projectDir, 'src/auth'); 
 
     // 1. Copy template files
     await fs.copy(templatePath, targetPath, { 
       overwrite: true,
-      filter: (src) => !src.includes('node_modules') // Safety check
+      filter: (src) => !src.includes('node_modules') 
     });
 
   } catch (error) {

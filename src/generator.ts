@@ -103,14 +103,14 @@ async function setupNextJsProject(projectDir: string, auth: AuthProvider) {
     const useTailwind = true;
     const useSrcDir = true;
     const useAppRouter = true;
-    const useTurpoback = false; // set from CLI if you prompt for it
+    const useTurpoback = false; 
     const importAlias = '@/*';
     const useEslint = false;
 
     // Build flags for create-next-app
     const flags = [
-      '--ts',                       // TypeScript
-      useTailwind && '--tailwind',  // Tailwind CSS
+      '--ts',                       
+      useTailwind && '--tailwind',  // Tailwind 
       useSrcDir && '--src-dir',     // src/ folder
       useAppRouter && '--app',      // App Router
       !useEslint && '--no-eslint',  // Disable ESLint

@@ -49,7 +49,7 @@ async function callback() {
             templateName: template,
             auth
         });
-        console.log(chalk.green(`Success! Project generated at ./${projectName}`));
+        console.log(chalk.green(`\nSuccess! Project generated at ./${projectName}`));
     } catch (error) {
         console.log(chalk.red(error));
         process.exit(1);
