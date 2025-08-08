@@ -22,13 +22,18 @@ const nanospinner_1 = require("nanospinner");
 const auth_1 = require("./auth");
 function generateTemplate(options) {
     return __awaiter(this, void 0, void 0, function* () {
-        const spinner = (0, nanospinner_1.createSpinner)('🚀 Launching project setup...').start();
+        const spinner = (0, nanospinner_1.createSpinner)('Launching project setup...').start();
         try {
             const { projectName, templateName, auth } = options;
+            // run create-next-app if nextjs is the template
+            if (templateName === 'nextjs') {
+                yield createNextApp(projectName, auth);
+                return;
+            }
             const templateDirectory = path_1.default.resolve(process.cwd(), 'src', 'templates', templateName);
             const targetDirectory = path_1.default.join(process.cwd(), projectName);
             // --- Validation Phase ---
-            spinner.update({ text: '🔍 Validating project...' });
+            spinner.update({ text: 'Validating project...' });
             if (!/^[a-z0-9-]+$/.test(projectName)) {
                 throw new Error("Project name must be lowercase, with hyphens only, no spaces.");
             }
@@ -39,13 +44,13 @@ function generateTemplate(options) {
                 throw new Error(`Template ${templateName} not found`);
             }
             // --- File Operations ---
-            spinner.update({ text: '📂 Copying template files...' });
+            spinner.update({ text: 'Copying template files...' });
             yield fs_extra_1.default.copy(templateDirectory, targetDirectory);
             spinner.stop();
             console.log(chalk_1.default.green('✓ Template files copied'));
             spinner.start();
             // --- Configuration ---
-            spinner.update({ text: '⚙️  Configuring project...' });
+            spinner.update({ text: 'Configuring project...' });
             const filesToProcess = ['package.json', 'README.md'];
             for (const file of filesToProcess) {
                 const filePath = path_1.default.join(targetDirectory, file);
@@ -55,13 +60,13 @@ function generateTemplate(options) {
                 }
             }
             // --- Dependencies ---
-            spinner.update({ text: '📦 Installing dependencies...' });
+            spinner.update({ text: 'Installing dependencies...' });
             spinner.stop();
             (0, child_process_1.execSync)('npm install', { cwd: targetDirectory, stdio: "inherit" });
             console.log(chalk_1.default.green('✓ Dependencies installed'));
             spinner.start();
             // --- Git Init ---
-            spinner.update({ text: '🐙 Initializing Git...' });
+            spinner.update({ text: 'Initializing Git...' });
             (0, child_process_1.execSync)('git init', { cwd: targetDirectory });
             spinner.stop();
             console.log(chalk_1.default.green('✓ Git repository initialized'));
@@ -96,6 +101,17 @@ function generateTemplate(options) {
             spinner.error({ text: '💥 Project generation failed' });
             console.error(chalk_1.default.red('\nError:'), error instanceof Error ? error.message : error);
             process.exit(1);
+        }
+    });
+}
+function createNextApp(targetDirectory, authProvider) {
+    return __awaiter(this, void 0, void 0, function* () {
+        // run create-next-app 
+        (0, child_process_1.execSync)(`npx create-next-app@latest ${targetDirectory}`, { stdio: 'inherit' });
+        if (authProvider !== "none") {
+            if (authProvider in auth_1.NEXTJS_AUTH_PROVIDERS) {
+                (0, auth_1.addNextJsAuth)(targetDirectory, authProvider);
+            }
         }
     });
 }
