@@ -1,4 +1,4 @@
-#!/usr/bin/env node   // To tell OS to execute this using Node
+#!/usr/bin/env node
 "use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -13,46 +13,51 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-//  imports
-const commander_1 = require("commander"); // To parse CLI arguments
-const inquirer_1 = __importDefault(require("inquirer")); //  To add interactivity to the tool
-const chalk_1 = __importDefault(require("chalk")); //  To add colours to CLI text
+const commander_1 = require("commander");
+const inquirer_1 = __importDefault(require("inquirer"));
+const chalk_1 = __importDefault(require("chalk"));
 const generator_1 = require("./generator");
 const program = new commander_1.Command();
 function callback() {
     return __awaiter(this, void 0, void 0, function* () {
-        const answers = yield inquirer_1.default.prompt([
+        const { template } = yield inquirer_1.default.prompt([
             {
                 type: 'list',
                 name: 'template',
-                message: 'Choose a template: ',
-                choices: ['express', 'react']
-            },
+                message: 'Choose a template:',
+                choices: ['express', 'react', 'nextjs']
+            }
+        ]);
+        let authChoices = [
+            { name: "No", value: 'none' },
+            { name: "Yes - Supabase", value: 'supabase' },
+            { name: "Yes - Firebase", value: 'firebase' }
+        ];
+        if (template === 'nextjs') {
+            authChoices.push({ name: "Yes - NextAuth.js", value: 'nextauth' });
+        }
+        const { projectName, auth } = yield inquirer_1.default.prompt([
             {
                 type: 'input',
                 name: 'projectName',
-                message: 'Enter project name: ',
-                default: 'my-app',
+                message: 'Enter project name:',
+                default: 'my-app'
             },
             {
                 type: "list",
                 name: "auth",
                 message: "Include authentication?",
-                choices: [
-                    { name: "No", value: 'none' },
-                    { name: "Yes - Supabase", value: 'supabase' },
-                    { name: "Yes- Firebase", value: 'firebase' }
-                ],
+                choices: authChoices,
                 default: 'none'
             }
         ]);
         try {
             yield (0, generator_1.generateTemplate)({
-                projectName: answers.projectName,
-                templateName: answers.template,
-                auth: answers.auth
+                projectName,
+                templateName: template,
+                auth
             });
-            console.log(chalk_1.default.green(`Success! Project generated is at ./${answers.projectName}`));
+            console.log(chalk_1.default.green(`Success! Project generated at ./${projectName}`));
         }
         catch (error) {
             console.log(chalk_1.default.red(error));
