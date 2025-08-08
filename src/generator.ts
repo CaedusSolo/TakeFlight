@@ -4,24 +4,32 @@ import Handlebars from 'handlebars';
 import { execSync } from 'child_process';
 import chalk from 'chalk';
 import { createSpinner } from 'nanospinner';
-import { AuthProvider, setupAuth } from './auth';
+import { AuthProvider, setupAuth, addNextJsAuth, NEXTJS_AUTH_PROVIDERS } from './auth';
+
 
 interface Options {
     projectName: string;
-    templateName: 'express' | 'react';
+    templateName: 'express' | 'react' | 'nextjs';
     auth: AuthProvider;
 }
 
 export async function generateTemplate(options: Options) {
-    const spinner = createSpinner('🚀 Launching project setup...').start();
+    const spinner = createSpinner('Launching project setup...').start();
 
     try {
         const { projectName, templateName, auth } = options;
+
+        // run create-next-app if nextjs is the template
+        if (templateName === 'nextjs') {
+            await createNextApp(projectName, auth)
+            return
+        }
+
         const templateDirectory = path.resolve(process.cwd(), 'src', 'templates', templateName);
         const targetDirectory = path.join(process.cwd(), projectName);
 
         // --- Validation Phase ---
-        spinner.update({ text: '🔍 Validating project...' });
+        spinner.update({ text: 'Validating project...' });
         if (!/^[a-z0-9-]+$/.test(projectName)) {
             throw new Error("Project name must be lowercase, with hyphens only, no spaces.");
         }
@@ -33,14 +41,14 @@ export async function generateTemplate(options: Options) {
         }
 
         // --- File Operations ---
-        spinner.update({ text: '📂 Copying template files...' });
+        spinner.update({ text: 'Copying template files...' });
         await fs.copy(templateDirectory, targetDirectory);
         spinner.stop();
         console.log(chalk.green('✓ Template files copied'));
         spinner.start();
 
         // --- Configuration ---
-        spinner.update({ text: '⚙️  Configuring project...' });
+        spinner.update({ text: 'Configuring project...' });
         const filesToProcess = ['package.json', 'README.md'];
         for (const file of filesToProcess) {
             const filePath = path.join(targetDirectory, file);
@@ -51,14 +59,14 @@ export async function generateTemplate(options: Options) {
         }
 
         // --- Dependencies ---
-        spinner.update({ text: '📦 Installing dependencies...' });
+        spinner.update({ text: 'Installing dependencies...' });
         spinner.stop();
         execSync('npm install', { cwd: targetDirectory, stdio: "inherit" });
         console.log(chalk.green('✓ Dependencies installed'));
         spinner.start();
 
         // --- Git Init ---
-        spinner.update({ text: '🐙 Initializing Git...' });
+        spinner.update({ text: 'Initializing Git...' });
         execSync('git init', { cwd: targetDirectory });
         spinner.stop();
         console.log(chalk.green('✓ Git repository initialized'));
@@ -94,5 +102,19 @@ export async function generateTemplate(options: Options) {
         spinner.error({ text: '💥 Project generation failed' });
         console.error(chalk.red('\nError:'), error instanceof Error ? error.message : error);
         process.exit(1);
+    }
+}
+
+async function createNextApp(targetDirectory: string, authProvider: AuthProvider) {
+    // run create-next-app 
+    execSync(
+        `npx create-next-app@latest ${targetDirectory}`,
+        { stdio: 'inherit' }
+    )
+
+    if (authProvider !== "none") {
+        if (authProvider in NEXTJS_AUTH_PROVIDERS) {
+            addNextJsAuth(targetDirectory, authProvider as keyof typeof NEXTJS_AUTH_PROVIDERS)
+        }
     }
 }
