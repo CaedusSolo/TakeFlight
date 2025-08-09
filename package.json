@@ -1,12 +1,13 @@
 {
-  "name": "take-flight",
+  "name": "take-flight-cli",
   "version": "1.0.0",
   "main": "dist/cli.js",
   "files": ["dist", "templates"],
   "scripts": {
     "build": "rimraf dist && tsc",
     "dev": "ts-node src/cli.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepublishOnly": "npm run build"
   },
   "bin": {
     "take-flight": "./dist/cli.js"
