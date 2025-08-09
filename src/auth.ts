@@ -60,7 +60,6 @@ export async function setupAuth(
     const templatePath = path.join(
       __dirname,
       '..', 
-      'src',
       'templates',
       'auth',
       isNextJsProject ? 'nextjs-auth' : 'auth', // Use correct parent folder
