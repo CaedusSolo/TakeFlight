@@ -58,9 +58,7 @@ function setupAuth(projectDir_1, provider_1) {
         spinner.stop();
         try {
             // Determine template source path
-            const templatePath = path_1.default.join(__dirname, '..', 'templates', 'auth', isNextJsProject ? 'nextjs-auth' : 'auth', // Use correct parent folder
-            provider // Go directly into provider-specific folder
-            );
+            const templatePath = path_1.default.join(__dirname, '..', 'templates', 'auth', isNextJsProject ? `nextjs-auth/${provider}` : `${provider}-auth`);
             // Determine target path
             const targetPath = isNextJsProject
                 ? path_1.default.join(projectDir, 'src/app')
