@@ -57,7 +57,7 @@ function callback() {
                 templateName: template,
                 auth
             });
-            console.log(chalk_1.default.green(`Success! Project generated at ./${projectName}`));
+            console.log(chalk_1.default.green(`\nSuccess! Project generated at ./${projectName}`));
         }
         catch (error) {
             console.log(chalk_1.default.red(error));

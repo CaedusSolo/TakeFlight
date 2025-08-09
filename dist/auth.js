@@ -58,17 +58,15 @@ function setupAuth(projectDir_1, provider_1) {
         spinner.stop();
         try {
             // Determine template source path
-            const templatePath = path_1.default.join(__dirname, '..', 'src', 'templates', 'auth', isNextJsProject ? 'nextjs-auth' : 'auth', // Use correct parent folder
-            provider // Go directly into provider-specific folder
-            );
+            const templatePath = path_1.default.join(__dirname, '..', 'templates', 'auth', isNextJsProject ? `nextjs-auth/${provider}` : `${provider}-auth`);
             // Determine target path
             const targetPath = isNextJsProject
-                ? path_1.default.join(projectDir, 'src/app') // Next.js puts auth in app/
-                : path_1.default.join(projectDir, 'src/auth'); // Others use src/auth
+                ? path_1.default.join(projectDir, 'src/app')
+                : path_1.default.join(projectDir, 'src/auth');
             // 1. Copy template files
             yield fs_extra_1.default.copy(templatePath, targetPath, {
                 overwrite: true,
-                filter: (src) => !src.includes('node_modules') // Safety check
+                filter: (src) => !src.includes('node_modules')
             });
         }
         catch (error) {

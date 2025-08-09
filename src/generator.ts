@@ -43,7 +43,7 @@ export async function generateTemplate(options: Options) {
 
         spinner.stop()
         // --- Regular Templates ---
-        const templateDirectory = path.resolve(__dirname, '..', 'src', 'templates', templateName);
+        const templateDirectory = path.resolve(__dirname, '..', 'templates', templateName);
 
         // Copy template
         spinner.update({ text: 'Copying template files...' });

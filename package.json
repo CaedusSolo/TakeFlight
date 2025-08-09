@@ -2,13 +2,14 @@
   "name": "take-flight",
   "version": "1.0.0",
   "main": "dist/cli.js",
+  "files": ["dist", "templates"],
   "scripts": {
     "build": "rimraf dist && tsc",
     "dev": "ts-node src/cli.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "bin": {
-    "take-flight": "dist/cli.js"
+    "take-flight": "./dist/cli.js"
   },
   "keywords": [],
   "author": "",

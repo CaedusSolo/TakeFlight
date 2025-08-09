@@ -47,7 +47,7 @@ function generateTemplate(options) {
             }
             spinner.stop();
             // --- Regular Templates ---
-            const templateDirectory = path_1.default.resolve(__dirname, '..', 'src', 'templates', templateName);
+            const templateDirectory = path_1.default.resolve(__dirname, '..', 'templates', templateName);
             // Copy template
             spinner.update({ text: 'Copying template files...' });
             yield fs_extra_1.default.copy(templateDirectory, targetDirectory);
@@ -99,13 +99,13 @@ function setupNextJsProject(projectDir, auth) {
             const useTailwind = true;
             const useSrcDir = true;
             const useAppRouter = true;
-            const useTurpoback = false; // set from CLI if you prompt for it
+            const useTurpoback = false;
             const importAlias = '@/*';
             const useEslint = false;
             // Build flags for create-next-app
             const flags = [
-                '--ts', // TypeScript
-                useTailwind && '--tailwind', // Tailwind CSS
+                '--ts',
+                useTailwind && '--tailwind', // Tailwind 
                 useSrcDir && '--src-dir', // src/ folder
                 useAppRouter && '--app', // App Router
                 !useEslint && '--no-eslint', // Disable ESLint
