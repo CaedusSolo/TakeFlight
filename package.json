@@ -13,7 +13,11 @@
     "take-flight": "./dist/cli.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "caedussolo",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/CaedusSolo/TakeFlight.git"
+  },
   "license": "ISC",
   "description": "",
   "devDependencies": {

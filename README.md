@@ -16,7 +16,7 @@
   - React + Vite
   - Express.js APIs
 - **Built-in Auth Templates**:
-  - 🔐 Supabase | Firebase | NextAuth.js
+  - Supabase | Firebase | NextAuth.js
 - **Developer Experience**:
   - TypeScript-ready 
   - Auto-installs dependencies 
