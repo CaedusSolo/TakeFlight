@@ -5,11 +5,13 @@ import { execSync } from 'child_process';
 import chalk from 'chalk';
 import { createSpinner } from 'nanospinner';
 import { AuthProvider, setupAuth, AUTH_PROVIDERS } from './auth';
+import { DbProvider } from './db';
 
 interface Options {
     projectName: string;
     templateName: 'express' | 'react' | 'nextjs';
     auth: AuthProvider;
+    db: DbProvider;
 }
 
 export async function generateTemplate(options: Options) {
@@ -17,7 +19,7 @@ export async function generateTemplate(options: Options) {
     spinner.stop()
 
     try {
-        const { projectName, templateName, auth } = options;
+        const { projectName, templateName, auth, db } = options;
         const sanitizedName = projectName
             .trim()
             .toLowerCase()
