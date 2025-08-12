@@ -1,6 +1,7 @@
 import chalk from "chalk";
 import fs from 'fs-extra'
 import path from "path";
+import { createSpinner } from "nanospinner";
 
 export type DbProvider = "sqlite" | "postgresql" | "mongodb" | "none"
 
@@ -27,16 +28,39 @@ export const DB_PROVIDERS: Record<Exclude<DbProvider, 'none'>, DbConfig> = {
     },
     mongodb: {
         envVars: [
-            'NEXTAUTH_SECRET',
-            'NEXTAUTH_URL',
-            'GITHUB_CLIENT_ID',
-            'GITHUB_CLIENT_SECRET'
+            "MONGODB_URI"
         ],
         dependencies: ['next-auth'],
         templateDir: 'nextauth',
     }
 };
 
-export async function setupDB() {
+export async function setupDB(projectDir: string, provider: DbProvider) {
+    if (provider === 'none') return
+
+    const config = DB_PROVIDERS[provider]
+    const spinner = createSpinner(`Configuring ${provider} database...`).start()
+
+    try {
+        const templatePath = path.join(
+            __dirname,
+            '..',
+            'templates',
+            'db'
+        );
+
+        const targetPath = path.join(projectDir, "src/db")
+
+        await fs.copy(templatePath, targetPath, {
+            overwrite: true,
+            filter: (src) => !src.includes('node_modules')
+        })
+    }
+    catch (error) {
+        spinner.error(chalk.red(`${provider} auth setup failed`));
+        console.error(chalk.red(error instanceof Error ? error.message : error));
+
+        await fs.remove(path.join(projectDir, 'src/db'));
+    }
 
 }
