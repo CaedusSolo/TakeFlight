@@ -8,86 +8,86 @@ import { AuthProvider, setupAuth, AUTH_PROVIDERS } from './auth';
 import { DbProvider } from './db';
 
 interface Options {
-    projectName: string;
-    templateName: 'express' | 'react' | 'nextjs';
-    auth: AuthProvider;
-    db: DbProvider;
+  projectName: string;
+  templateName: 'express' | 'react' | 'nextjs';
+  auth: AuthProvider;
+  db: DbProvider;
 }
 
 export async function generateTemplate(options: Options) {
-    const spinner = createSpinner('Initializing project...').start();
+  const spinner = createSpinner('Initializing project...').start();
+  spinner.stop()
+
+  try {
+    const { projectName, templateName, auth, db } = options;
+    const isNextJsProject = templateName === "nextjs"
+    const sanitizedName = projectName
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, '-') // replace spaces with hyphens
+      .replace(/[^a-z0-9-]/g, '');
+
+    const targetDirectory = path.join(process.cwd(), sanitizedName);
+
+    // --- Validation ---
+    if (!/^[a-z0-9-]+$/.test(projectName)) {
+      throw new Error("Project name must be lowercase with hyphens only");
+    }
+    if (await fs.pathExists(targetDirectory)) {
+      throw new Error(`Directory ${projectName} already exists`);
+    }
+
+    // --- Next.js Special Handling ---
+    if (templateName === 'nextjs') {
+      await setupNextJsProject(targetDirectory, auth);
+      spinner.stop()
+      return;
+    }
+
+    spinner.stop()
+    // --- Regular Templates ---
+    const templateDirectory = path.resolve(__dirname, '..', 'templates', templateName);
+
+    // Copy template
+    spinner.update({ text: 'Copying template files...' });
+    await fs.copy(templateDirectory, targetDirectory);
+
+    // Process template files
+    spinner.update({ text: 'Configuring project...' });
+    const filesToProcess = ['package.json', 'README.md'];
+    for (const file of filesToProcess) {
+      const filePath = path.join(targetDirectory, file);
+      if (await fs.pathExists(filePath)) {
+        const content = await fs.readFile(filePath, 'utf-8');
+        await fs.writeFile(filePath, Handlebars.compile(content)({ projectName }));
+      }
+    }
+
+    // Install dependencies
+    spinner.update({ text: 'Installing dependencies...' });
+    execSync('npm install', { cwd: targetDirectory, stdio: "inherit" });
+
+    // Initialize Git
+    spinner.update({ text: 'Initializing Git...' });
+    execSync('git init', { cwd: targetDirectory });
     spinner.stop()
 
-    try {
-        const { projectName, templateName, auth, db } = options;
-        const sanitizedName = projectName
-            .trim()
-            .toLowerCase()
-            .replace(/\s+/g, '-') // replace spaces with hyphens
-            .replace(/[^a-z0-9-]/g, ''); 
-
-        const targetDirectory = path.join(process.cwd(), sanitizedName);
-
-        // --- Validation ---
-        if (!/^[a-z0-9-]+$/.test(projectName)) {
-            throw new Error("Project name must be lowercase with hyphens only");
-        }
-        if (await fs.pathExists(targetDirectory)) {
-            throw new Error(`Directory ${projectName} already exists`);
-        }
-
-        // --- Next.js Special Handling ---
-        if (templateName === 'nextjs') {
-            await setupNextJsProject(targetDirectory, auth);
-            spinner.stop()
-            return;
-        }
-
-        spinner.stop()
-        // --- Regular Templates ---
-        const templateDirectory = path.resolve(__dirname, '..', 'templates', templateName);
-
-        // Copy template
-        spinner.update({ text: 'Copying template files...' });
-        await fs.copy(templateDirectory, targetDirectory);
-
-        // Process template files
-        spinner.update({ text: 'Configuring project...' });
-        const filesToProcess = ['package.json', 'README.md'];
-        for (const file of filesToProcess) {
-            const filePath = path.join(targetDirectory, file);
-            if (await fs.pathExists(filePath)) {
-                const content = await fs.readFile(filePath, 'utf-8');
-                await fs.writeFile(filePath, Handlebars.compile(content)({ projectName }));
-            }
-        }
-
-        // Install dependencies
-        spinner.update({ text: 'Installing dependencies...' });
-        execSync('npm install', { cwd: targetDirectory, stdio: "inherit" });
-
-        // Initialize Git
-        spinner.update({ text: 'Initializing Git...' });
-        execSync('git init', { cwd: targetDirectory });
-        spinner.stop()
-
-        // Setup auth (if specified)
-        if (auth !== 'none') {
-            await setupAuth(targetDirectory, auth);
-        }
-
-        if (db !== 'none') {
-
-        }
-
-        // Success message
-        printSuccessMessage(projectName, auth);
-
-    } catch (error) {
-        spinner.error(chalk.red('Project generation failed'));
-        console.error(chalk.red(error instanceof Error ? error.message : error));
-        process.exit(1);
+    if (auth !== 'none') {
+      await setupAuth(targetDirectory, auth, isNextJsProject);
     }
+
+    if (db !== 'none') {
+
+    }
+
+    // Success message
+    printSuccessMessage(projectName, auth);
+
+  } catch (error) {
+    spinner.error(chalk.red('Project generation failed'));
+    console.error(chalk.red(error instanceof Error ? error.message : error));
+    process.exit(1);
+  }
 }
 
 async function setupNextJsProject(projectDir: string, auth: AuthProvider) {
@@ -109,13 +109,13 @@ async function setupNextJsProject(projectDir: string, auth: AuthProvider) {
     const useTailwind = true;
     const useSrcDir = true;
     const useAppRouter = true;
-    const useTurpoback = false; 
+    const useTurpoback = false;
     const importAlias = '@/*';
     const useEslint = false;
 
     // Build flags for create-next-app
     const flags = [
-      '--ts',                       
+      '--ts',
       useTailwind && '--tailwind',  // Tailwind 
       useSrcDir && '--src-dir',     // src/ folder
       useAppRouter && '--app',      // App Router
@@ -151,13 +151,13 @@ async function setupNextJsProject(projectDir: string, auth: AuthProvider) {
 
 
 function printSuccessMessage(projectName: string, auth: AuthProvider) {
-    console.log(chalk.bold.green('\nProject ready!'));
-    console.log(chalk.blue('\nNext steps:'));
-    console.log(`  ${chalk.cyan(`cd ${projectName}`)}`);
-    console.log(`  ${chalk.cyan('npm run dev')}`);
+  console.log(chalk.bold.green('\nProject ready!'));
+  console.log(chalk.blue('\nNext steps:'));
+  console.log(`  ${chalk.cyan(`cd ${projectName}`)}`);
+  console.log(`  ${chalk.cyan('npm run dev')}`);
 
-    if (auth !== 'none') {
-        console.log(chalk.yellow('\nConfigure these in .env.local:'));
-        console.log(chalk.cyan(AUTH_PROVIDERS[auth].envVars.join('\n')));
-    }
+  if (auth !== 'none') {
+    console.log(chalk.yellow('\nConfigure these in .env.local:'));
+    console.log(chalk.cyan(AUTH_PROVIDERS[auth].envVars.join('\n')));
+  }
 }
