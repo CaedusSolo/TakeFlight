@@ -15,8 +15,8 @@ export interface AuthConfig {
 export const AUTH_PROVIDERS: Record<Exclude<AuthProvider, 'none'>, AuthConfig> = {
   supabase: {
     envVars: [
-      'NEXT_PUBLIC_SUPABASE_URL',
-      'NEXT_PUBLIC_SUPABASE_ANON_KEY'
+      'SUPABASE_URL',
+      'SUPABASE_KEY'
     ],
     dependencies: ['@supabase/supabase-js'],
     templateDir: 'supabase-auth',
@@ -24,8 +24,8 @@ export const AUTH_PROVIDERS: Record<Exclude<AuthProvider, 'none'>, AuthConfig> =
   },
   firebase: {
     envVars: [
-      'NEXT_PUBLIC_FIREBASE_API_KEY',
-      'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN'
+      'PUBLIC_FIREBASE_API_KEY',
+      'PUBLIC_FIREBASE_AUTH_DOMAIN'
     ],
     dependencies: ['firebase'],
     templateDir: 'firebase-auth',

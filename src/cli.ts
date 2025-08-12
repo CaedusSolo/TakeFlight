@@ -23,11 +23,18 @@ async function callback() {
         { name: "Yes - Firebase", value: 'firebase' }
     ];
 
+    const dbChoices = [
+        { name: "No", value: 'none' },
+        { name: "Yes - SQLite", value: "sqlite" },
+        { name: "Yes - PostgreSQL", value: "postgresql"},
+        { name: "Yes - MongoDB", value: "mongodb"},
+    ]
+
     if (template === 'nextjs') {
         authChoices.push({ name: "Yes - NextAuth.js", value: 'nextauth' });
     }
 
-    const { projectName, auth } = await inquirer.prompt([
+    const { projectName, auth, db } = await inquirer.prompt([
         {
             type: 'input',
             name: 'projectName',
@@ -40,6 +47,13 @@ async function callback() {
             message: "Include authentication?",
             choices: authChoices,
             default: 'none'
+        },
+        {
+            type: "list",
+            name: "db",
+            message: "Include database?",
+            choices: dbChoices,
+            default: 'none'
         }
     ]);
 
@@ -47,7 +61,8 @@ async function callback() {
         await generateTemplate({
             projectName,
             templateName: template,
-            auth
+            auth,
+            db
         });
         console.log(chalk.green(`\nSuccess! Project generated at ./${projectName}`));
     } catch (error) {

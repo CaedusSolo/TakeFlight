@@ -1,8 +1,11 @@
 {
   "name": "take-flight-cli",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "dist/cli.js",
-  "files": ["dist", "templates"],
+  "files": [
+    "dist",
+    "templates"
+  ],
   "scripts": {
     "build": "rimraf dist && tsc",
     "dev": "ts-node src/cli.ts",
