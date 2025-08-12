@@ -76,6 +76,10 @@ export async function generateTemplate(options: Options) {
             await setupAuth(targetDirectory, auth);
         }
 
+        if (db !== 'none') {
+
+        }
+
         // Success message
         printSuccessMessage(projectName, auth);
 
