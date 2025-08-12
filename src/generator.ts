@@ -5,7 +5,7 @@ import { execSync } from 'child_process';
 import chalk from 'chalk';
 import { createSpinner } from 'nanospinner';
 import { AuthProvider, setupAuth, AUTH_PROVIDERS } from './auth';
-import { DbProvider } from './db';
+import { DbProvider, setupDB } from './db';
 
 interface Options {
   projectName: string;
@@ -77,7 +77,7 @@ export async function generateTemplate(options: Options) {
     }
 
     if (db !== 'none') {
-
+      await setupDB(targetDirectory, db)
     }
 
     // Success message

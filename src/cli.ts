@@ -49,7 +49,7 @@ async function callback() {
             default: 'none'
         },
         {
-            type: "input",
+            type: "list",
             name: "db",
             message: "Include database?",
             choices: dbChoices,

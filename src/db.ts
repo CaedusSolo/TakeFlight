@@ -46,7 +46,8 @@ export async function setupDB(projectDir: string, provider: DbProvider) {
             __dirname,
             '..',
             'templates',
-            'db'
+            'db', 
+            `${provider}`
         );
 
         const targetPath = path.join(projectDir, "src/db")
@@ -55,6 +56,8 @@ export async function setupDB(projectDir: string, provider: DbProvider) {
             overwrite: true,
             filter: (src) => !src.includes('node_modules')
         })
+
+        spinner.stop()
     }
     catch (error) {
         spinner.error(chalk.red(`${provider} auth setup failed`));
