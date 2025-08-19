@@ -178,7 +178,7 @@ async function createEnvFile(
     if (error.code == "EEXIST") {
       console.log(chalk.yellow(".env file already exists, skipping setup..."))
     }
-  } )
+  })
 
   console.log(chalk.green(`Successfully created ${envFileName} with the needed variables.`))
 }
@@ -188,7 +188,7 @@ function printSuccessMessage(projectName: string, auth: AuthProvider) {
   console.log(chalk.bold.green('\nProject ready!'));
   console.log(chalk.blue('\nNext steps:'));
   console.log(`  ${chalk.cyan(`cd ${projectName}`)}`);
-  console.log(` ${chalk.cyan("git remote add origin https://github.com/yourusername/projectname.git")}`)
+  console.log(`  ${chalk.cyan("git remote add origin https://github.com/yourusername/projectname.git")}`)
   console.log(`  ${chalk.cyan('npm run dev')}`);
 
   if (auth !== 'none') {

@@ -13,7 +13,11 @@ async function callback() {
             type: 'list',
             name: 'template',
             message: 'Choose a template:',
-            choices: ['ExpressJS', 'ReactJS', 'NextJS']
+            choices: [
+                { name: 'Express', value: 'express' },
+                { name: 'ReactJS', value: 'react' },
+                { name: 'NextJS', value: 'nextjs' }
+            ]
         }
     ]);
 
@@ -26,8 +30,8 @@ async function callback() {
     const dbChoices = [
         { name: "No", value: 'none' },
         { name: "Yes - SQLite", value: "sqlite" },
-        { name: "Yes - PostgreSQL", value: "postgresql"},
-        { name: "Yes - MongoDB", value: "mongodb"},
+        { name: "Yes - PostgreSQL", value: "postgresql" },
+        { name: "Yes - MongoDB", value: "mongodb" },
     ]
 
     if (template === 'nextjs') {
