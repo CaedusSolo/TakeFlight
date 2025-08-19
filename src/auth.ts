@@ -24,8 +24,12 @@ export const AUTH_PROVIDERS: Record<Exclude<AuthProvider, 'none'>, AuthConfig> =
   },
   firebase: {
     envVars: [
-      'PUBLIC_FIREBASE_API_KEY',
-      'PUBLIC_FIREBASE_AUTH_DOMAIN'
+      'FIREBASE_API_KEY',
+      'FIREBASE_AUTH_DOMAIN',
+      'FIREBASE_PROJECT_ID',
+      'FIREBASE_STORAGE_BUCKET',
+      'FIREBASE_MESSAGING_SENDER_ID',
+      'FIREBASE_APP_ID'
     ],
     dependencies: ['firebase'],
     templateDir: 'firebase-auth',
@@ -36,7 +40,9 @@ export const AUTH_PROVIDERS: Record<Exclude<AuthProvider, 'none'>, AuthConfig> =
       'NEXTAUTH_SECRET',
       'NEXTAUTH_URL',
       'GITHUB_CLIENT_ID',
-      'GITHUB_CLIENT_SECRET'
+      'GITHUB_CLIENT_SECRET',
+      'GOOGLE_CLIENT_ID',
+      'GOOGLE_CLIENT_SECRET'
     ],
     dependencies: ['next-auth'],
     templateDir: 'nextauth',
