@@ -1,6 +1,6 @@
 {
   "name": "take-flight-cli",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "main": "dist/cli.js",
   "files": [
     "dist",
