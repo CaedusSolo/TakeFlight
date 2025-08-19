@@ -21,7 +21,11 @@ export const DB_PROVIDERS: Record<Exclude<DbProvider, 'none'>, DbConfig> = {
     },
     postgresql: {
         envVars: [
-            "DATABASE_URL", "PG_HOST", "PG_USER", "PG_PASSWORD", "PG_DATABASE"
+            "DATABASE_URL",
+            "PG_HOST",
+            "PG_USER",
+            "PG_PASSWORD",
+            "PG_DATABASE"
         ],
         dependencies: ['pg', '@types/pg --save-dev'],
         templateDir: 'postgresql',
@@ -46,7 +50,7 @@ export async function setupDB(projectDir: string, provider: DbProvider) {
             __dirname,
             '..',
             'templates',
-            'db', 
+            'db',
             `${provider}`
         );
 

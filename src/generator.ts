@@ -5,7 +5,7 @@ import { execSync } from 'child_process';
 import chalk from 'chalk';
 import { createSpinner } from 'nanospinner';
 import { AuthProvider, setupAuth, AUTH_PROVIDERS } from './auth';
-import { DbProvider, setupDB } from './db';
+import { DB_PROVIDERS, DbProvider, setupDB } from './db';
 
 interface Options {
   projectName: string;
@@ -80,6 +80,10 @@ export async function generateTemplate(options: Options) {
       await setupDB(targetDirectory, db)
     }
 
+    // create .env/.env.local file
+    await createEnvFile(targetDirectory, auth, db, isNextJsProject)
+    await createGitignore(targetDirectory)
+
     // Success message
     printSuccessMessage(projectName, auth);
 
@@ -150,15 +154,82 @@ async function setupNextJsProject(projectDir: string, auth: AuthProvider) {
 }
 
 
+async function createEnvFile(
+  projectDirectory: string,
+  auth: AuthProvider,
+  db: DbProvider,
+  isNextJsProject: boolean
+) {
+  let envVars: string[] = []
+
+  if (auth !== "none") {
+    envVars = envVars.concat(AUTH_PROVIDERS[auth].envVars)
+  }
+  if (db !== "none") {
+    envVars = envVars.concat(DB_PROVIDERS[db].envVars)
+  }
+
+  if (envVars.length === 0) return
+  const envFileName = isNextJsProject ? ".env.local" : ".env"
+  const envFilePath = path.join(projectDirectory, envFileName)
+
+  const envContent = envVars.map((v) => `${v}=your_${v.toLowerCase()}_here`).join("\n") + "\n"
+  await fs.writeFile(envFilePath, envContent, { flag: "wx" })
+    .catch(async (error) => {
+      if (error.code == "EEXIST") {
+        console.log(chalk.yellow(".env file already exists, skipping setup..."))
+      }
+    })
+
+  console.log(chalk.green(`Successfully created ${envFileName} with the needed variables.`))
+}
+
+
+async function createGitignore(targetDirectory: string) {
+  const gitignoreContent = `
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Env files
+.env
+.env.local
+.env.*.local
+
+# Build
+dist/
+build/
+.next/
+out/
+coverage/
+
+# Logs
+logs
+*.log
+*.log.*
+`;
+
+  const gitignorePath = path.join(targetDirectory, '.gitignore');
+
+  if (!(await fs.pathExists(gitignorePath))) {
+    await fs.writeFile(gitignorePath, gitignoreContent.trim() + '\n');
+    console.log(chalk.green("Successfully created and populated .gitignore"))
+  }
+}
+
+
 function printSuccessMessage(projectName: string, auth: AuthProvider) {
   console.log(chalk.bold.green('\nProject ready!'));
   console.log(chalk.blue('\nNext steps:'));
   console.log(`  ${chalk.cyan(`cd ${projectName}`)}`);
-  console.log(` ${chalk.cyan("git remote add origin https://github.com/yourusername/projectname.git")}`)
+  console.log(`  ${chalk.cyan("git remote add origin https://github.com/yourusername/projectname.git")}`)
   console.log(`  ${chalk.cyan('npm run dev')}`);
 
   if (auth !== 'none') {
-    console.log(chalk.yellow('\nConfigure these in .env.local:'));
+    console.log(chalk.yellow('\nConfigure these in .env (.env.local if NextJS):'));
     console.log(chalk.cyan(AUTH_PROVIDERS[auth].envVars.join('\n')));
   }
 }
