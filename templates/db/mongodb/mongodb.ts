@@ -1,33 +1,49 @@
-import mongoose from 'mongoose'
-import 'dotenv/config'
+import mongoose, { Schema, Document, Model } from "mongoose"
+import "dotenv/config"
 
-export async function connectDB() {
+export async function connectDB(): Promise<void> {
   try {
     if (!process.env.MONGODB_URI) {
-      throw new Error('MONGODB_URI missing in .env');
+      throw new Error("MONGODB_URI missing in .env")
     }
-    
-    await mongoose.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-    console.log('MongoDB connected');
+
+    await mongoose.connect(process.env.MONGODB_URI)
+    console.log("MongoDB connected")
   } catch (error) {
-    console.error('MongoDB connection failed:', error.message);
-    process.exit(1); 
+    if (error instanceof Error) {
+      console.error("MongoDB connection failed:", error.message)
+    } else {
+      console.error("Unknown MongoDB connection error:", error)
+    }
+    process.exit(1)
   }
 }
 
-const UserSchema = new mongoose.Schema({
+
+interface IUser extends Document {
+  email: string
+  name: string
+}
+
+
+const UserSchema = new Schema<IUser>({
   email: { type: String, required: true },
   name: { type: String, required: true },
-});
+})
 
-export async function ping() {
+
+export const User: Model<IUser> =
+  mongoose.models.User || mongoose.model<IUser>("User", UserSchema)
+
+
+export async function ping(): Promise<{ status: string; timestamp?: Date; error?: string }> {
   try {
     await mongoose.connection.db.admin().ping();
-    return { status: 'healthy', timestamp: new Date() };
+    return { status: "healthy", timestamp: new Date() }
   } catch (err) {
-    return { status: 'unhealthy', error: err.message };
+    if (err instanceof Error) {
+      return { status: "unhealthy", error: err.message }
+    }
+    return { status: "unhealthy", error: "Unknown error" }
   }
 }
