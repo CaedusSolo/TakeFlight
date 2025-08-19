@@ -15,7 +15,26 @@
   "bin": {
     "take-flight": "./dist/cli.js"
   },
-  "keywords": [],
+  "keywords": [
+    "boilerplate",
+    "starter",
+    "template",
+    "scaffolding",
+    "generator",
+    "cli",
+    "project-generator",
+    "project-template",
+    "starter-kit",
+    "codegen",
+    "nodejs",
+    "typescript",
+    "express",
+    "react",
+    "mongodb",
+    "fullstack",
+    "setup",
+    "automation"
+  ],
   "author": "caedussolo",
   "repository": {
     "type": "git",
