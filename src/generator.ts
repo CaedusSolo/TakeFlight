@@ -82,6 +82,7 @@ export async function generateTemplate(options: Options) {
 
     // create .env/.env.local file
     await createEnvFile(targetDirectory, auth, db, isNextJsProject)
+    await createGitignore(targetDirectory)
 
     // Success message
     printSuccessMessage(projectName, auth);
@@ -168,19 +169,55 @@ async function createEnvFile(
     envVars = envVars.concat(DB_PROVIDERS[db].envVars)
   }
 
-  if (envVars.length === 0) return 
+  if (envVars.length === 0) return
   const envFileName = isNextJsProject ? ".env.local" : ".env"
   const envFilePath = path.join(projectDirectory, envFileName)
 
   const envContent = envVars.map((v) => `${v}=your_${v.toLowerCase()}_here`).join("\n") + "\n"
-  await fs.writeFile(envFilePath, envContent, {flag: "wx"})
-  .catch(async (error) => {
-    if (error.code == "EEXIST") {
-      console.log(chalk.yellow(".env file already exists, skipping setup..."))
-    }
-  })
+  await fs.writeFile(envFilePath, envContent, { flag: "wx" })
+    .catch(async (error) => {
+      if (error.code == "EEXIST") {
+        console.log(chalk.yellow(".env file already exists, skipping setup..."))
+      }
+    })
 
   console.log(chalk.green(`Successfully created ${envFileName} with the needed variables.`))
+}
+
+
+async function createGitignore(targetDirectory: string) {
+  const gitignoreContent = `
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Env files
+.env
+.env.local
+.env.*.local
+
+# Build
+dist/
+build/
+.next/
+out/
+coverage/
+
+# Logs
+logs
+*.log
+*.log.*
+`;
+
+  const gitignorePath = path.join(targetDirectory, '.gitignore');
+
+  if (!(await fs.pathExists(gitignorePath))) {
+    await fs.writeFile(gitignorePath, gitignoreContent.trim() + '\n');
+    console.log(chalk.green("Successfully created and populated .gitignore"))
+  }
 }
 
 
