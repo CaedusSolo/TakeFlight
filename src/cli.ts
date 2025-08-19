@@ -13,7 +13,7 @@ async function callback() {
             type: 'list',
             name: 'template',
             message: 'Choose a template:',
-            choices: ['express', 'react', 'nextjs']
+            choices: ['ExpressJS', 'ReactJS', 'NextJS']
         }
     ]);
 
