@@ -82,7 +82,9 @@ export async function generateTemplate(options: Options) {
 
     // create .env/.env.local file
     await createEnvFile(targetDirectory, auth, db, isNextJsProject)
-    await createGitignore(targetDirectory)
+    if (!isNextJsProject) {
+      await createGitignore(targetDirectory)
+    }
 
     // Success message
     printSuccessMessage(projectName, auth);
