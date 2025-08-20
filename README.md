@@ -21,7 +21,7 @@
 - **Developer Experience**:
   - TypeScript-ready 
   - Auto-installs dependencies 
-  - Git initialized 
+  - Git initialized with .gitignore
 
 ---
 
